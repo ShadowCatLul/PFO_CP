@@ -7,15 +7,19 @@ import numpy as np
 import rasterio
 from PIL import Image
 
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(f'{DEVICE= }')
+
 app = FastAPI()
 
 class WaterSurfaceSegmentation:
     def __init__(self, model_path):
         self.model = self.load_unet_model(model_path)
-        self.transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.5] * 10, std=[0.5] * 10)
-        ])
+        self.transform = None
+        # transforms.Compose([
+        #     transforms.ToTensor(),
+        #     transforms.Normalize(mean=[0.5] * 10, std=[0.5] * 10)
+        # ])
 
     def load_unet_model(self, path_to_state_dict):
         model = self.create_unet_with_10_channels()
@@ -49,6 +53,6 @@ async def predict(file: UploadFile = File(...)):
 
     model_path = "best_model_dice.pth"
     segmenter = WaterSurfaceSegmentation(model_path)
-    mask = segmenter.predict(image)
+    mask = segmenter.predict(img_tensor)
     
     return {"mask": mask.tolist()}

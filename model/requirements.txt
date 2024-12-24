@@ -1,1 +1,9 @@
-flask
+torch==2.4.1
+torchvision
+torchaudio
+-f https://download.pytorch.org/whl/cu121
+numpy==1.26.3
+fastapi
+rasterio
+pillow
+segmentation_models_pytorch
