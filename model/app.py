@@ -1,11 +1,7 @@
 from fastapi import FastAPI, File, UploadFile
-import segmentation_models_pytorch as smp
 import torch
-from torch import nn
-from torchvision import transforms
-import numpy as np
 import rasterio
-from PIL import Image
+
 from model import WaterSurfaceSegmentation
 
 
@@ -29,7 +25,7 @@ async def predict(file: UploadFile = File(...)):
     model_path = "best_model.pth"
     segmenter = WaterSurfaceSegmentation(model_path)
     mask = segmenter.predict(img_tensor)
-    
+    print(mask.shape)
     return {"mask": mask.tolist()}
 
 if __name__ == '__main__':

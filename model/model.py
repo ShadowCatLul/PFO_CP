@@ -1,11 +1,11 @@
 import segmentation_models_pytorch as smp
 import torch
-
+from torchvision import transforms
 
 class WaterSurfaceSegmentation:
     def __init__(self, model_path):
         self.model = self.load_unet_model(model_path)
-        self.transform = None
+        self.transform = transforms.ToTensor()
         # transforms.Compose([
         #     transforms.ToTensor(),
         #     transforms.Normalize(mean=[0.5] * 10, std=[0.5] * 10)
@@ -25,8 +25,9 @@ class WaterSurfaceSegmentation:
             classes=1
         )
 
-    def predict(self, image_array):
-        image_tensor = self.transform(image_array).unsqueeze(0)
+    def predict(self, image_tensor):
+        # image_tensor = self.transform(image_tensor).unsqueeze(0)
+        image_tensor = image_tensor.unsqueeze(0)
         with torch.no_grad():
             prediction = self.model(image_tensor)
         return prediction.squeeze().numpy()
