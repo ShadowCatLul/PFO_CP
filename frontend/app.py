@@ -63,10 +63,21 @@ def predict():
 
 def generate_rgb_image(file):
     """Generate an RGB image from a multispectral TIF file."""
+    
+    def brighten(band):
+        alpha = 0.13
+        beta = 0
+        return np.clip(alpha * band + beta, 0, 255)
+    
     with rasterio.open(file) as src:
         blue = src.read(1)
         green = src.read(2)
         red = src.read(3)
+
+        blue = brighten(blue)
+        green = brighten(green)
+        red = brighten(red)
+            
         rgb = np.stack((red, green, blue), axis=-1)
         rgb_image = Image.fromarray((rgb / rgb.max() * 255).astype('uint8'))
         return rgb_image
