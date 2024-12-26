@@ -8,3 +8,4 @@ uvicorn
 rasterio
 pillow
 segmentation_models_pytorch
+python-multipart

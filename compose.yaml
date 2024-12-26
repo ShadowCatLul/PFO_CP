@@ -28,6 +28,11 @@ services:
       - appnetwork
     ports:
       - "5002:5002"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
 
 networks:
   appnetwork:

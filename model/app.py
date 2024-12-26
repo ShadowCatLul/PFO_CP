@@ -6,7 +6,7 @@ from torchvision import transforms
 import numpy as np
 import rasterio
 from PIL import Image
-from .model import WaterSurfaceSegmentation
+from model import WaterSurfaceSegmentation
 
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
