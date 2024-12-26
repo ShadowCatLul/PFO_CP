@@ -1,13 +1,233 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>Upload Multispectral Image</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multispectral Image Processor</title>
+    <style>
+        /* General Styling */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .main-container {
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+            margin-top: 20px;
+        }
+
+        .upload-section {
+            width: 40%;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .upload-placeholder {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .upload-placeholder:hover {
+            border-color: #4CAF50;
+        }
+
+        .actions {
+            margin-top: 20px;
+        }
+
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .button:hover {
+            background-color: #45a049;
+        }
+
+        .output-section {
+            width: 55%;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        img {
+            margin-top: 20px;
+            max-width: 100%;
+            border-radius: 10px;
+        }
+
+        .upload-card {
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        h2 {
+            color: #333;
+        }
+    </style>
 </head>
 <body>
-    <h1>Upload Multispectral Image (.tif)</h1>
-    <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" accept=".tif">
-        <button type="submit">Upload</button>
-    </form>
+    <header>
+        <h1>Multispectral Image Processor</h1>
+    </header>
+    <div class="main-container">
+        <div class="upload-section" id="uploadSection">
+            <!-- Cards will be added dynamically here -->
+            <div class="upload-card" id="uploadCard_1">
+                <button class="close-btn" onclick="removeCard(this)">×</button>
+                <div class="upload-placeholder" onclick="this.nextElementSibling.click();">
+                    Drag & Drop or Click to Upload
+                </div>
+                <input type="file" name="file" accept=".tif" style="display:none" onchange="handleFileUpload(event, this)">
+                <div class="actions">
+                    <button class="button" onclick="showRgb(this)">Show RGB</button>
+                    <button class="button" onclick="predict(this)">Predict</button>
+                </div>
+            </div>
+        </div>
+        <div class="output-section" id="output">
+            <h2>Results</h2>
+            <div id="result"></div>
+        </div>
+    </div>
+    <script>
+        let cardCount = 1; // Track the number of cards
+
+        // Function to handle file upload
+        function handleFileUpload(event, inputElement) {
+            const fileInput = inputElement;
+            const fileName = fileInput.files[0].name;
+            const parentCard = fileInput.parentElement;
+
+            parentCard.querySelector('.upload-placeholder').textContent = fileName;
+
+            // Always create a new upload card after a file is uploaded
+            createNewUploadCard();
+        }
+
+        // Function to create a new upload card
+        function createNewUploadCard() {
+            // Check if there is only one card and it is empty (last card)
+            const uploadSection = document.getElementById('uploadSection');
+            const currentCards = uploadSection.getElementsByClassName('upload-card');
+            
+            // If there's only one card, don't allow adding a new one
+            if (currentCards.length === 1 && currentCards[0].querySelector('.upload-placeholder').textContent === "Drag & Drop or Click to Upload") {
+                return; // Don't create a new card
+            }
+
+            // Otherwise, add a new card
+            cardCount++;
+            const newCard = document.createElement('div');
+            newCard.classList.add('upload-card');
+            newCard.id = `uploadCard_${cardCount}`;
+
+            newCard.innerHTML = `
+                <button class="close-btn" onclick="removeCard(this)">×</button>
+                <div class="upload-placeholder" onclick="this.nextElementSibling.click();">
+                    Drag & Drop or Click to Upload
+                </div>
+                <input type="file" name="file" accept=".tif" style="display:none" onchange="handleFileUpload(event, this)">
+                <div class="actions">
+                    <button class="button" onclick="showRgb(this)">Show RGB</button>
+                    <button class="button" onclick="predict(this)">Predict</button>
+                </div>
+            `;
+
+            uploadSection.appendChild(newCard);
+        }
+
+        // Function to remove a card
+        function removeCard(button) {
+            const card = button.parentElement;
+            card.remove();
+
+            // Check if there are no cards left, then prevent adding new cards
+            const uploadSection = document.getElementById('uploadSection');
+            if (uploadSection.children.length === 0) {
+                createNewUploadCard(); // Create one initial card if all are removed
+            }
+        }
+
+        // Show RGB image
+        async function showRgb(button) {
+            const formData = new FormData();
+            const fileInput = button.parentElement.parentElement.querySelector('input[type="file"]');
+            formData.append('file', fileInput.files[0]);
+            const response = await fetch('/show_rgb', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            if (data.rgb_image) {
+                document.getElementById('result').innerHTML = `<h3>RGB Image</h3><img src="${data.rgb_image}" alt="RGB Image">`;
+            } else {
+                document.getElementById('result').textContent = data.error || 'Error processing image.';
+            }
+        }
+
+        // Prediction function
+        async function predict(button) {
+            const formData = new FormData();
+            const fileInput = button.parentElement.parentElement.querySelector('input[type="file"]');
+            formData.append('file', fileInput.files[0]);
+            const response = await fetch('/predict', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            document.getElementById('result').textContent = data.message || data.error || 'Error processing prediction.';
+        }
+    </script>
 </body>
 </html>
