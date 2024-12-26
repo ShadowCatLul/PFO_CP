@@ -216,18 +216,71 @@
             }
         }
 
-        // Prediction function
-        async function predict(button) {
-            const formData = new FormData();
-            const fileInput = button.parentElement.parentElement.querySelector('input[type="file"]');
-            formData.append('file', fileInput.files[0]);
-            const response = await fetch('/predict', {
-                method: 'POST',
-                body: formData
-            });
+        // Функция для предсказания и отображения результата
+async function predict(button) {
+    const formData = new FormData();
+    const fileInput = button.parentElement.parentElement.querySelector('input[type="file"]');
+    if (fileInput.files.length === 0) {
+        document.getElementById('result').textContent = 'No file selected.';
+        return;
+    }
+    formData.append('file', fileInput.files[0]);
+
+    try {
+        // Запрос на предсказание
+        const response = await fetch('/predict', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
             const data = await response.json();
-            document.getElementById('result').textContent = data.message || data.error || 'Error processing prediction.';
+            console.log('Response data:', data);
+            // Проверяем, что данные содержат нужную информацию
+            if (data.mask) {
+                // Запрос на получение исходного изображения
+                const rgbResponse = await fetch('/show_rgb', {
+                    method: 'POST',
+                    body: formData
+                });
+                const rgbData = await rgbResponse.json();
+                if (rgbData.rgb_image) {
+                    // Наложение маски на изображение
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+                    img.src = rgbData.rgb_image;
+                    img.onload = () => {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                        ctx.globalAlpha = 0.5;
+                        ctx.fillStyle = 'rgba(128, 0, 128, 0.5)'; // Фиолетовый полупрозрачный цвет
+                        const mask = data.mask;
+                        for (let y = 0; y < mask.length; y++) {
+                            for (let x = 0; x < mask[y].length; x++) {
+                                if (mask[y][x] > 0) {
+                                    ctx.fillRect(x, y, 1, 1);
+                                }
+                            }
+                        }
+                        document.getElementById('result').innerHTML = `<h3>Prediction Result</h3>`;
+                        document.getElementById('result').appendChild(canvas);
+                    };
+                } else {
+                    document.getElementById('result').textContent = rgbData.error || 'Error processing RGB image.';
+                }
+            } else {
+                document.getElementById('result').textContent = data.message || data.error || 'Error processing prediction.';
+            }
+        } else {
+            document.getElementById('result').textContent = `Error: ${response.statusText}`;
         }
+    } catch (error) {
+        document.getElementById('result').textContent = 'Error sending request.';
+        console.error('Error:', error);
+    }
+}
     </script>
 </body>
 </html>

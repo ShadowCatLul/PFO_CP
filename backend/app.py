@@ -15,8 +15,7 @@ def process():
         try:
             # Отправляем изображение в модельный контейнер
             response = requests.post(MODEL_CONTAINER_URL, files={'file': file.read()})
-            print(response.status_code)
-            print(response)
+            print(f'{response=}')
             if response.status_code == 200:
                 return jsonify(response.json())
             else:

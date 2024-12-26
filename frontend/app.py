@@ -44,13 +44,21 @@ def predict():
         return jsonify({"error": "No selected file"}), 400
     if file:
         # Отправляем изображение в бэкенд
+        print("1")
         backend_url = "http://backend:5001/process"
-        response = requests.post(backend_url, files={'file': file})
-        if response.status_code == 200:
-            data = response.json()
-            return jsonify(data)
-        else:
-            return jsonify({"error": "Failed to process image in backend."}), 500
+        try:
+            print("2")
+            response = requests.post(backend_url, files={'file': file})
+            print("3")
+            print(f'{response=}')
+            if response.status_code == 200:
+                print("4")
+                data = response.json()
+                return jsonify(data)
+            else:
+                return jsonify({"error": "Failed to process image in backend."}), 500
+        except Exception as e:
+            return jsonify({"error": f"Backend request failed: {str(e)}"}), 500
 
 
 def generate_rgb_image(file):
