@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 import io
 import base64
+import requests
 # Initialize Flask application
 app = Flask(__name__)
 
@@ -42,8 +43,15 @@ def predict():
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400
     if file:
-        # Placeholder for backend prediction logic
-        return jsonify({"message": "Prediction completed!"})
+        # Отправляем изображение в бэкенд
+        backend_url = "http://backend:5001/process"
+        response = requests.post(backend_url, files={'file': file})
+        if response.status_code == 200:
+            data = response.json()
+            return jsonify(data)
+        else:
+            return jsonify({"error": "Failed to process image in backend."}), 500
+
 
 def generate_rgb_image(file):
     """Generate an RGB image from a multispectral TIF file."""

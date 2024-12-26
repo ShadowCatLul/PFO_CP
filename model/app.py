@@ -6,40 +6,13 @@ from torchvision import transforms
 import numpy as np
 import rasterio
 from PIL import Image
+from .model import WaterSurfaceSegmentation
+
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(f'{DEVICE= }')
 
 app = FastAPI()
-
-class WaterSurfaceSegmentation:
-    def __init__(self, model_path):
-        self.model = self.load_unet_model(model_path)
-        self.transform = None
-        # transforms.Compose([
-        #     transforms.ToTensor(),
-        #     transforms.Normalize(mean=[0.5] * 10, std=[0.5] * 10)
-        # ])
-
-    def load_unet_model(self, path_to_state_dict):
-        model = self.create_unet_with_10_channels()
-        model.load_state_dict(torch.load(path_to_state_dict, map_location=torch.device('cpu')))
-        model.eval()
-        return model
-
-    def create_unet_with_10_channels(self):
-        return smp.Unet(
-            encoder_name="resnet34",
-            encoder_weights=None,
-            in_channels=10,
-            classes=1
-        )
-
-    def predict(self, image_array):
-        image_tensor = self.transform(image_array).unsqueeze(0)
-        with torch.no_grad():
-            prediction = self.model(image_tensor)
-        return prediction.squeeze().numpy()
     
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
@@ -47,12 +20,17 @@ async def predict(file: UploadFile = File(...)):
         image = src.read()
     if image.shape[0] != 10:
         return {"error": "Image must have 10 channels."}
+    
     img_tensor = torch.from_numpy(image).float()
     img_tensor = torch.clamp(img_tensor, min=0, max=5000)
     img_tensor = img_tensor / 5000
 
-    model_path = "best_model_dice.pth"
+    # Загрузка модели и предсказание
+    model_path = "best_model.pth"
     segmenter = WaterSurfaceSegmentation(model_path)
     mask = segmenter.predict(img_tensor)
     
     return {"mask": mask.tolist()}
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5002)

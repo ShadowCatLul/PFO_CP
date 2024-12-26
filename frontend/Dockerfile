@@ -12,11 +12,12 @@ RUN apt-get update && apt-get install -y \
 # Копируем файл requirements.txt в контейнер
 COPY requirements.txt /workspace/requirements.txt
 
-COPY . /workspace
+
 
 # Установка зависимостей из requirements.txt
 RUN pip install --no-cache-dir -r /workspace/requirements.txt
 
+COPY . /workspace
 # Установим рабочую директорию
 WORKDIR /workspace
 

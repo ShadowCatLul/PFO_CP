@@ -13,11 +13,13 @@ COPY requirements.txt /workspace/requirements.txt
 # Установка зависимостей из requirements.txt
 RUN pip install --no-cache-dir -r /workspace/requirements.txt
 
+
+COPY . /workspace
 # Проверка установки
 # RUN python -c "import torch; print(torch.cuda.is_available())"
 
 # Установим рабочую директорию
 WORKDIR /workspace
 
-# По умолчанию запускаем bash
-CMD ["/bin/bash"]
+# Указываем команду для запуска FastAPI с помощью uvicorn
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5002", "--workers", "1"]

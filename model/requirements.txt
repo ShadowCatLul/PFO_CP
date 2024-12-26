@@ -4,6 +4,7 @@ torchaudio
 -f https://download.pytorch.org/whl/cu121
 numpy==1.26.3
 fastapi
+uvicorn
 rasterio
 pillow
 segmentation_models_pytorch
